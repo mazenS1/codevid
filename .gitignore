@@ -2,6 +2,13 @@
 /node_modules
 /.pnp
 .pnp.js
+# Dependencies
+node_modules/
+/node_modules
+/server/node_modules
+/.pnp
+.pnp.js
+...existing code...
 
 # Testing
 /coverage
