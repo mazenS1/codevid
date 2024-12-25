@@ -11,12 +11,13 @@ import {
 } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 
-export function CodeGeneratorForm({ onThemeChange }) {
+export function CodeGeneratorForm({ onThemeChange, onLanguageChange }) {
   const [code, setCode] = useState('console.log("Hello, World!");');
   const [language, setLanguage] = useState("javascript");
   const [typingSpeed, setTypingSpeed] = useState(50);
   const [theme, setTheme] = useState("tomorrow");
   const [frameRate, setFrameRate] = useState(30);
+  const [selectedBackground, setselectedBackground] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [videoUrl, setVideoUrl] = useState(null);
@@ -41,6 +42,7 @@ export function CodeGeneratorForm({ onThemeChange }) {
             typingSpeed,
             theme,
             frameRate,
+            selectedBackground,
           }),
         }
       );
@@ -62,6 +64,11 @@ export function CodeGeneratorForm({ onThemeChange }) {
   const handleThemeChange = (value) => {
     setTheme(value);
     onThemeChange(value);
+  };
+
+  const handleLanguageChange = (value) => {
+    setLanguage(value);
+    onLanguageChange(value);
   };
 
   return (
@@ -89,7 +96,7 @@ export function CodeGeneratorForm({ onThemeChange }) {
             >
               Language
             </label>
-            <Select value={language} onValueChange={setLanguage}>
+            <Select value={language} onValueChange={handleLanguageChange}>
               <SelectTrigger className="w-full rounded-lg">
                 <SelectValue placeholder="Select a language" />
               </SelectTrigger>
@@ -158,6 +165,31 @@ export function CodeGeneratorForm({ onThemeChange }) {
               required
               className="w-full rounded-lg"
             />
+          </div>
+
+          <div>
+            <label
+              htmlFor="selectedBackground"
+              className="block text-sm font-medium mb-1"
+            >
+              Background Color
+            </label>
+            <Select
+              value={selectedBackground}
+              onValueChange={setselectedBackground}
+            >
+              <SelectTrigger className="w-full rounded-lg">
+                <SelectValue placeholder="Select a background color (optional)" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={null}>None</SelectItem>
+                <SelectItem value="#000000">Black</SelectItem>
+                <SelectItem value="#FFFFFF">White</SelectItem>
+                <SelectItem value="#1A1A1A">Dark Gray</SelectItem>
+                <SelectItem value="#F0F0F0">Light Gray</SelectItem>
+                <SelectItem value="#0D1117">GitHub Dark</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <Button

@@ -17,7 +17,7 @@ app.use(cors({
 }));
 app.use(express.json());
 app.post('/generate-syntax-video', async (req, res) => {
-    const { code, language, typingSpeed = 50, theme, frameRate } = req.body;
+    const { code, language, typingSpeed = 50, theme, frameRate, selectedBackground } = req.body;
     const framesDir = path.join(__dirname, 'syntax-frames');
     const outputPath = path.join(__dirname, 'syntax-output.mp4');
 
@@ -64,40 +64,48 @@ app.post('/generate-syntax-video', async (req, res) => {
         const htmlTemplate = `
             <html>
             <head>
-                <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/${selectedTheme}.min.css">
-                <style>
-                    body {
-                        background: ${theme === 'solarizedlight' ? '#fdf6e3' : 'rgb(0, 0, 0)'};
-                        padding: 40px;
-                        font-family: 'Courier New', monospace;
-                        display: flex;
-                        justify-content: center;
-                        align-items: center;
-                        min-height: 100vh;
-                        margin: 0;
-                    }
-                    pre {
-                        font-size: 24px;
-                        line-height: 1.5;
-                        margin: 0;
-                        padding: 30px;
-                        border-radius: 10px;
-                        box-shadow: 0 0 20px rgba(0,0,0,0.3);
-                        width: 90%;
-                        max-width: 1600px;
-                    }
-                    .cursor {
-                        border-right: 3px solid ${theme === 'solarizedlight' ? '#000' : '#fff'};
-                        margin-right: -3px;
-                        animation: blink 1s infinite;
-                    }
-                    @keyframes blink {
-                        50% { opacity: 0; }
-                    }
-                </style>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/${selectedTheme}.min.css">
+            <style>
+            body {
+            background: ${!selectedBackground ? 
+                (theme === 'solarizedlight' ? '#fdf6e3' : 
+                theme === 'tomorrow' ? '#2d2d2d' :
+                theme === 'dark' ? '#1e1e1e' :
+                theme === 'okaidia' ? '#272822' :
+                theme === 'twilight' ? '#141414' :
+                theme === 'coy' ? '#fdfdfd' :
+                theme === 'funky' ? '#333' : '#000000') : 
+                selectedBackground};
+            padding: 40px;
+            font-family: 'Courier New', monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            }
+            pre {
+            font-size: 24px;
+            line-height: 1.5;
+            margin: 0;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.3);
+            width: 90%;
+            max-width: 1600px;
+            }
+            .cursor {
+            border-right: 3px solid ${theme === 'solarizedlight' || theme === 'coy' ? '#000' : '#fff'};
+            margin-right: -3px;
+            animation: blink 1s infinite;
+            }
+            @keyframes blink {
+            50% { opacity: 0; }
+            }
+            </style>
             </head>
             <body>
-                <pre><code class="language-${language}">CONTENT_PLACEHOLDER</code></pre>
+            <pre><code class="language-${language}">CONTENT_PLACEHOLDER</code></pre>
             </body>
             </html>
         `;
