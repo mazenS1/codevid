@@ -30,7 +30,7 @@ export function CodeGeneratorForm({ onThemeChange, onLanguageChange }) {
 
     try {
       const response = await fetch(
-        "http://localhost:3000/generate-syntax-video",
+        "http://localhost:3000/api/generate-syntax-video",
         {
           method: "POST",
           headers: {
