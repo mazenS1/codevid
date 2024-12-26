@@ -50,10 +50,18 @@ export function CodeGeneratorForm({ onThemeChange, onLanguageChange }) {
       if (!response.ok) {
         throw new Error("Failed to generate video");
       }
-
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      setVideoUrl(url);
+      const { downloadUrl } = await response.json();
+      // Create a download button
+      const downloadButton = document.createElement("a");
+      downloadButton.href = downloadUrl;
+      downloadButton.className = "download-button";
+      downloadButton.innerHTML = "Download Video";
+      downloadButton.download = "code-animation.mp4"; // Suggests filename to user
+      // Add button to page
+      document.body.appendChild(downloadButton);
+      downloadButton.click();
+      // Remove button after a short delay
+      setTimeout(() => downloadButton.remove(), 1000);
     } catch (err) {
       setError(err.message);
     } finally {

@@ -6,10 +6,45 @@ const prism = require('prismjs');
 const loadLanguages = require('prismjs/components/');
 loadLanguages(['javascript', 'python', 'html', 'css']);
 
+// Initialize cleanup interval once
+const videoDir = path.join(__dirname, 'temp_videos');
+if (!fs.existsSync(videoDir)) {
+    fs.mkdirSync(videoDir, { recursive: true });
+}
+
+// Global cleanup interval
+setInterval(() => {
+    if (!fs.existsSync(videoDir)) return;
+    
+    fs.readdir(videoDir, (err, files) => {
+        if (err) {
+            console.error('Cleanup error:', err);
+            return;
+        }
+
+        const now = Date.now();
+        files.forEach(file => {
+            const filePath = path.join(videoDir, file);
+            fs.stat(filePath, (statErr, stats) => {
+                if (statErr) return;
+                // Delete files older than 15 minutes
+                if (now - stats.mtimeMs > 1 * 60 * 1000) {
+                    fs.unlink(filePath, err => {
+                        if (err) console.error('Error deleting old file:', err);
+                    });
+                }
+            });
+        });
+    });
+}, 1 * 60 * 1000);
+
 const generateSyntaxVideo = async (req, res) => {
+    // Create a temporary directory for videos if it doesn't exist
     const { code, language, typingSpeed, theme, frameRate, selectedBackground } = req.body;
     const framesDir = path.join(__dirname, 'syntax-frames');
-    const outputPath = path.join(__dirname, 'syntax-output.mp4');
+
+    const videoId = Date.now().toString();
+    const outputPath = path.join(videoDir, `${videoId}.mp4`);
 
     const themeMap = {
         tomorrow: 'prism-tomorrow',
@@ -181,8 +216,16 @@ const generateSyntaxVideo = async (req, res) => {
                 .on('end', resolve)
                 .on('error', reject);
         });
+        const downloadLink = `/api/videos/${videoId}`;	
+        res.json(
+            {
+                downloadLink,
+                message : 'Video generated successfully',
+                expirein: '24h'
+            }
+        )
 
-        res.sendFile(outputPath);
+        
     } catch (error) {
         console.error(error);
         res.status(500).send('Error generating syntax highlighted video');
@@ -191,7 +234,32 @@ const generateSyntaxVideo = async (req, res) => {
     }
 };
 
+// Fix typo in function name
+const downloadVideo = (req, res) => {
+    const { videoId } = req.params;
+    const videoPath = path.join(videoDir, `${videoId}.mp4`);
+    
+    if (!fs.existsSync(videoPath)) {
+        return res.status(404).send('Video not found');
+    }
+    
+    res.download(videoPath, 'code-animation.mp4', (err) => {
+        if (err) {
+            console.error('Download error:', err);
+            return res.status(500).send('Error downloading file');
+        }
+        // Ensure video is deleted after download completes
+        setTimeout(() => {
+            fs.unlink(videoPath, (unlinkErr) => {
+                if (unlinkErr && fs.existsSync(videoPath)) {
+                    console.error('Error deleting file:', unlinkErr);
+                }
+            });
+        }, 1000); // Small delay to ensure download completes
+    });
+};
 
 module.exports = {
-    generateSyntaxVideo
+    generateSyntaxVideo,
+    downloadVideo // Update export name
 };
