@@ -28,7 +28,7 @@ setInterval(() => {
             fs.stat(filePath, (statErr, stats) => {
                 if (statErr) return;
                 // Delete files older than 15 minutes
-                if (now - stats.mtimeMs > 1 * 60 * 1000) {
+                if (now - stats.mtimeMs > 60 * 60 * 1000) {
                     fs.unlink(filePath, err => {
                         if (err) console.error('Error deleting old file:', err);
                     });
@@ -36,7 +36,7 @@ setInterval(() => {
             });
         });
     });
-}, 1 * 60 * 1000);
+}, 60 * 60 * 1000);
 
 const generateSyntaxVideo = async (req, res) => {
     // Create a temporary directory for videos if it doesn't exist
@@ -216,7 +216,7 @@ const generateSyntaxVideo = async (req, res) => {
                 .on('end', resolve)
                 .on('error', reject);
         });
-        const downloadLink = `/api/videos/${videoId}`;	
+        const downloadLink = `/api/download-video/${videoId}`;	
         res.json(
             {
                 downloadLink,
@@ -236,8 +236,14 @@ const generateSyntaxVideo = async (req, res) => {
 
 // Fix typo in function name
 const downloadVideo = (req, res) => {
+    console.log('Download video function called');
+    console.log('Request params:', req.params);
     const { videoId } = req.params;
     const videoPath = path.join(videoDir, `${videoId}.mp4`);
+    console.log('Attempting to download video:');
+    console.log('Video ID:', videoId);
+    console.log('Video Path:', videoPath);
+    console.log('Video exists:', fs.existsSync(videoPath));
     
     if (!fs.existsSync(videoPath)) {
         return res.status(404).send('Video not found');
@@ -255,11 +261,48 @@ const downloadVideo = (req, res) => {
                     console.error('Error deleting file:', unlinkErr);
                 }
             });
-        }, 1000); // Small delay to ensure download completes
+        }, 10000); // Small delay to ensure download completes
     });
+};
+
+const streamVideo = (req, res) => {
+    const { videoId } = req.params;
+    const videoPath = path.join(videoDir, `${videoId}.mp4`);
+    
+    if (!fs.existsSync(videoPath)) {
+        return res.status(404).send('Video not found');
+    }
+
+    const stat = fs.statSync(videoPath);
+    const fileSize = stat.size;
+    const range = req.headers.range;
+
+    if (range) {
+        const parts = range.replace(/bytes=/, "").split("-");
+        const start = parseInt(parts[0], 10);
+        const end = parts[1] ? parseInt(parts[1], 10) : fileSize-1;
+        const chunksize = (end-start)+1;
+        const file = fs.createReadStream(videoPath, {start, end});
+        const head = {
+            'Content-Range': `bytes ${start}-${end}/${fileSize}`,
+            'Accept-Ranges': 'bytes',
+            'Content-Length': chunksize,
+            'Content-Type': 'video/mp4',
+        };
+        res.writeHead(206, head);
+        file.pipe(res);
+    } else {
+        const head = {
+            'Content-Length': fileSize,
+            'Content-Type': 'video/mp4',
+        };
+        res.writeHead(200, head);
+        fs.createReadStream(videoPath).pipe(res);
+    }
 };
 
 module.exports = {
     generateSyntaxVideo,
-    downloadVideo // Update export name
+    downloadVideo,
+    streamVideo
 };

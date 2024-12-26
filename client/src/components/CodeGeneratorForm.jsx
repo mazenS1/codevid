@@ -21,6 +21,9 @@ export function CodeGeneratorForm({ onThemeChange, onLanguageChange }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [videoUrl, setVideoUrl] = useState(null);
+  const [downloadUrl, setDownloadUrl] = useState(null);
+  const [downloadFeedback, setDownloadFeedback] = useState(null);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -50,22 +53,46 @@ export function CodeGeneratorForm({ onThemeChange, onLanguageChange }) {
       if (!response.ok) {
         throw new Error("Failed to generate video");
       }
-      const { downloadUrl } = await response.json();
-      // Create a download button
-      const downloadButton = document.createElement("a");
-      downloadButton.href = downloadUrl;
-      downloadButton.className = "download-button";
-      downloadButton.innerHTML = "Download Video";
-      downloadButton.download = "code-animation.mp4"; // Suggests filename to user
-      // Add button to page
-      document.body.appendChild(downloadButton);
-      downloadButton.click();
-      // Remove button after a short delay
-      setTimeout(() => downloadButton.remove(), 1000);
+
+      const data = await response.json();
+      console.log("Response data:", data);
+      // Create separate URLs for streaming and downloading
+      const videoId = data.downloadLink.split("/").pop();
+      const streamUrl = `http://localhost:3000/api/stream-video/${videoId}`;
+      const downloadUrl = `http://localhost:3000${data.downloadLink}`;
+      setVideoUrl(streamUrl); // Use streamUrl for video player
+      setDownloadUrl(downloadUrl); // Use downloadUrl for download button
     } catch (err) {
+      console.error("Error:", err);
       setError(err.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDownload = async () => {
+    setDownloadFeedback(null);
+    setIsDownloading(true);
+    try {
+      const response = await fetch(downloadUrl);
+      if (!response.ok) throw new Error("Download failed");
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "code-animation.mp4";
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      setDownloadFeedback("Download successful!");
+    } catch (err) {
+      console.error("Download error:", err);
+      setError("Failed to download video");
+      setDownloadFeedback("Download failed.");
+    } finally {
+      setTimeout(() => setIsDownloading(false), 3000); // Set loading state for 3 seconds
     }
   };
 
@@ -211,22 +238,30 @@ export function CodeGeneratorForm({ onThemeChange, onLanguageChange }) {
       </div>
 
       {error && <p className="text-red-500 mt-4">{error}</p>}
-
       {videoUrl && (
-        <div className="mt-4">
-          <h2 className="text-lg font-semibold mb-2">Generated Video</h2>
+        <div className="mt-4 space-y-4">
+          <h2 className="text-lg font-semibold">Generated Video</h2>
           <video
+            key={videoUrl}
             src={videoUrl}
             controls
             className="w-full max-w-2xl rounded-lg"
+            type="video/mp4"
           />
-          <Button
-            onClick={() => window.open(videoUrl, "_blank")}
-            className="mt-2 rounded-lg"
-          >
-            Download Video
-          </Button>
+          <div className="flex justify-center">
+            <Button
+              type="button" // Add type="button" to prevent form submission
+              onClick={handleDownload}
+              className="w-full md:w-auto"
+              disabled={isDownloading} // Disable button while downloading
+            >
+              {isDownloading ? "Downloading..." : "Download Video"}
+            </Button>
+          </div>
         </div>
+      )}
+      {downloadFeedback && (
+        <p className="text-green-500 mt-4">{downloadFeedback}</p>
       )}
     </form>
   );
