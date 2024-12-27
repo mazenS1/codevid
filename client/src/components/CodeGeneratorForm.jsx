@@ -207,6 +207,11 @@ export function CodeGeneratorForm({ onThemeChange, onLanguageChange }) {
               required
               className="w-full rounded-lg"
             />
+            {frameRate > 30 && (
+              <p className="text-yellow-500 text-sm mt-1">
+                Note: Frame rates above 30 FPS will be capped at 30 FPS for optimal performance
+              </p>
+            )}
           </div>
 
           <div>
