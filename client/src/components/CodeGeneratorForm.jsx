@@ -11,6 +11,8 @@ import {
 } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 
+const API_BASE_URL =  process.env.REACT_APP_API_BASE_URL || "";
+
 export function CodeGeneratorForm({ onThemeChange, onLanguageChange }) {
   const [code, setCode] = useState('console.log("Hello, World!");');
   const [language, setLanguage] = useState("javascript");
@@ -33,7 +35,7 @@ export function CodeGeneratorForm({ onThemeChange, onLanguageChange }) {
 
     try {
       const response = await fetch(
-        "http://localhost:3000/api/generate-syntax-video",
+        `${API_BASE_URL}/api/generate-syntax-video`,
         {
           method: "POST",
           headers: {
@@ -56,12 +58,14 @@ export function CodeGeneratorForm({ onThemeChange, onLanguageChange }) {
 
       const data = await response.json();
       console.log("Response data:", data);
-      // Create separate URLs for streaming and downloading
+      
+      // Create URLs for streaming and downloading
       const videoId = data.downloadLink.split("/").pop();
-      const streamUrl = `http://localhost:3000/api/stream-video/${videoId}`;
-      const downloadUrl = `http://localhost:3000${data.downloadLink}`;
-      setVideoUrl(streamUrl); // Use streamUrl for video player
-      setDownloadUrl(downloadUrl); // Use downloadUrl for download button
+      const streamUrl = `${API_BASE_URL}/api/stream-video/${videoId}`;
+      setVideoUrl(streamUrl);
+      
+      // Store the video ID for later download
+      setDownloadUrl(videoId);
     } catch (err) {
       console.error("Error:", err);
       setError(err.message);
@@ -74,25 +78,28 @@ export function CodeGeneratorForm({ onThemeChange, onLanguageChange }) {
     setDownloadFeedback(null);
     setIsDownloading(true);
     try {
-      const response = await fetch(downloadUrl);
-      if (!response.ok) throw new Error("Download failed");
+      // First get the download URL from the API
+      const response = await fetch(`${API_BASE_URL}/api/download-video/${downloadUrl}`);
+      if (!response.ok) throw new Error("Failed to get download URL");
+      
+      const data = await response.json();
+      if (!data.downloadUrl) throw new Error("No download URL received");
 
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "code-animation.mp4";
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-      setDownloadFeedback("Download successful!");
+      // Create a temporary link to download the file
+      const link = document.createElement('a');
+      link.href = `${API_BASE_URL}${data.downloadUrl}`;
+      link.download = `code-animation-${downloadUrl}.mp4`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      setDownloadFeedback("Download started!");
     } catch (err) {
       console.error("Download error:", err);
       setError("Failed to download video");
       setDownloadFeedback("Download failed.");
     } finally {
-      setTimeout(() => setIsDownloading(false), 3000); // Set loading state for 3 seconds
+      setTimeout(() => setIsDownloading(false), 3000);
     }
   };
 
