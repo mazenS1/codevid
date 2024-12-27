@@ -64,6 +64,10 @@ const generateSyntaxVideo = async (req, res) => {
     const { code, language, typingSpeed, theme, frameRate, selectedBackground } = req.body;
     const framesDir = path.join(__dirname, 'syntax-frames');
 
+    if (frameRate > 30) {
+        frameRate = 30;
+    }
+
     // Ensure directories exist with proper permissions
     [framesDir, videoDir].forEach(dir => {
         if (!fs.existsSync(dir)) {

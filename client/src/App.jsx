@@ -12,9 +12,7 @@ function App() {
     <ThemeProvider defaultTheme="dark" attribute="class">
       <div className="container mx-auto p-4">
         <div className="flex justify-between items-center mb-4">
-          <h1 className="text-2xl font-bold">
-            Syntax Highlighted Video Generator
-          </h1>
+          <h1 className="text-2xl font-bold">Code to Video Generator</h1>
           <ThemeToggle />
         </div>
         <CodeGeneratorForm
