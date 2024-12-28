@@ -16,7 +16,7 @@ const API_BASE_URL =  process.env.REACT_APP_API_BASE_URL || "";
 export function CodeGeneratorForm({ onThemeChange, onLanguageChange }) {
   const [code, setCode] = useState('console.log("Hello, World!");');
   const [language, setLanguage] = useState("javascript");
-  const [typingSpeed, setTypingSpeed] = useState(50);
+  const [typingSpeed, setTypingSpeed] = useState(85);
   const [theme, setTheme] = useState("tomorrow");
   const [frameRate, setFrameRate] = useState(30);
   const [selectedBackground, setselectedBackground] = useState(null);
@@ -57,7 +57,6 @@ export function CodeGeneratorForm({ onThemeChange, onLanguageChange }) {
       }
 
       const data = await response.json();
-      console.log("Response data:", data);
       
       // Create URLs for streaming and downloading
       const videoId = data.downloadLink.split("/").pop();
@@ -67,7 +66,6 @@ export function CodeGeneratorForm({ onThemeChange, onLanguageChange }) {
       // Store the video ID for later download
       setDownloadUrl(videoId);
     } catch (err) {
-      console.error("Error:", err);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -95,7 +93,7 @@ export function CodeGeneratorForm({ onThemeChange, onLanguageChange }) {
       
       setDownloadFeedback("Download started!");
     } catch (err) {
-      console.error("Download error:", err);
+      
       setError("Failed to download video");
       setDownloadFeedback("Download failed.");
     } finally {
@@ -160,8 +158,8 @@ export function CodeGeneratorForm({ onThemeChange, onLanguageChange }) {
             </label>
             <Slider
               id="typingSpeed"
-              min={10}
-              max={100}
+              min={85}
+              max={300}
               step={1}
               value={[typingSpeed]}
               onValueChange={(value) => setTypingSpeed(value[0])}
