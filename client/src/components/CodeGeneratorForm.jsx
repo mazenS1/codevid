@@ -16,7 +16,7 @@ const API_BASE_URL =  process.env.REACT_APP_API_BASE_URL || "";
 export function CodeGeneratorForm({ onThemeChange, onLanguageChange }) {
   const [code, setCode] = useState('console.log("Hello, World!");');
   const [language, setLanguage] = useState("javascript");
-  const [typingSpeed, setTypingSpeed] = useState(100);
+  const [typingSpeed, setTypingSpeed] = useState(150);
   const [theme, setTheme] = useState("tomorrow");
   const [frameRate, setFrameRate] = useState(30);
   const [selectedBackground, setselectedBackground] = useState(null);
@@ -178,7 +178,6 @@ export function CodeGeneratorForm({ onThemeChange, onLanguageChange }) {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="tomorrow">Tomorrow</SelectItem>
-                <SelectItem value="dark">Dark</SelectItem>
                 <SelectItem value="okaidia">Okaidia</SelectItem>
                 <SelectItem value="twilight">Twilight</SelectItem>
                 <SelectItem value="coy">Coy</SelectItem>

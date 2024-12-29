@@ -13,8 +13,8 @@ if (!fs.existsSync(videoDir)) {
     fs.mkdirSync(videoDir, { recursive: true });
 }
 
-const CLEANUP_INTERVAL = 30 * 60 * 1000; // 30 minutes
-const FILE_EXPIRY = 20 * 60 * 1000; // 20 minutes
+const CLEANUP_INTERVAL = 10 * 60 * 1000; // 10 minutes
+const FILE_EXPIRY = 5 * 60 * 1000; // 5 minutes
 
 // Global cleanup interval
 setInterval(() => {
