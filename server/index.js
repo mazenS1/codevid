@@ -4,11 +4,15 @@ const path = require('path');
 const syntaxRoutes = require('./routes/syntax');
 const { logger, requestLogger, getRequestStats } = require('./utils/logger');
 const basicAuth = require('express-basic-auth');
+const rateLimiter = require('./middleware/Ratelimte');
 
 const app = express();
 
 // Request logging
 app.use(requestLogger);
+
+// Rate limiter
+app.use(rateLimiter({ maxRequests: 10, windowMs: 60 * 1000 }));
 
 // CORS configuration
 app.use(cors({
