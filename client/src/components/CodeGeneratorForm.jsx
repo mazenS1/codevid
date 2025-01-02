@@ -10,6 +10,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 const API_BASE_URL =  process.env.REACT_APP_API_BASE_URL || "";
 
@@ -26,12 +28,15 @@ export function CodeGeneratorForm({ onThemeChange, onLanguageChange }) {
   const [downloadUrl, setDownloadUrl] = useState(null);
   const [downloadFeedback, setDownloadFeedback] = useState(null);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [rateLimitExceeded, setRateLimitExceeded] = useState(false);
+  const [retryAfter, setRetryAfter] = useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
     setVideoUrl(null);
+    setRateLimitExceeded(false);
 
     try {
       const response = await fetch(
@@ -51,19 +56,24 @@ export function CodeGeneratorForm({ onThemeChange, onLanguageChange }) {
           }),
         }
       );
-
+      if (response.status === 429) {
+        const retryAfter = response.headers.get("Retry-After");
+        setRateLimitExceeded(true);
+        setRetryAfter(6000);
+        throw new Error(
+          `Rate limit exceeded. Please try again in ${retryAfter} seconds.`
+        );
+      }
       if (!response.ok) {
         throw new Error("Failed to generate video");
       }
 
       const data = await response.json();
       
-      // Create URLs for streaming and downloading
       const videoId = data.downloadLink.split("/").pop();
       const streamUrl = `${API_BASE_URL}/api/stream-video/${videoId}`;
       setVideoUrl(streamUrl);
       
-      // Store the video ID for later download
       setDownloadUrl(videoId);
     } catch (err) {
       setError(err.message);
@@ -76,14 +86,12 @@ export function CodeGeneratorForm({ onThemeChange, onLanguageChange }) {
     setDownloadFeedback(null);
     setIsDownloading(true);
     try {
-      // First get the download URL from the API
       const response = await fetch(`${API_BASE_URL}/api/download-video/${downloadUrl}`);
       if (!response.ok) throw new Error("Failed to get download URL");
       
       const data = await response.json();
       if (!data.downloadUrl) throw new Error("No download URL received");
 
-      // Create a temporary link to download the file
       const link = document.createElement('a');
       link.href = `${API_BASE_URL}${data.downloadUrl}`;
       link.download = `code-animation-${downloadUrl}.mp4`;
@@ -93,7 +101,6 @@ export function CodeGeneratorForm({ onThemeChange, onLanguageChange }) {
       
       setDownloadFeedback("Download started!");
     } catch (err) {
-      
       setError("Failed to download video");
       setDownloadFeedback("Download failed.");
     } finally {
@@ -238,7 +245,7 @@ export function CodeGeneratorForm({ onThemeChange, onLanguageChange }) {
 
           <Button
             type="submit"
-            disabled={loading}
+            disabled={loading || rateLimitExceeded}
             className="w-full rounded-lg"
           >
             {loading ? "Generating..." : "Generate Video"}
@@ -246,7 +253,17 @@ export function CodeGeneratorForm({ onThemeChange, onLanguageChange }) {
         </div>
       </div>
 
-      {error && <p className="text-red-500 mt-4">{error}</p>}
+      {rateLimitExceeded && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Rate Limit Exceeded</AlertTitle>
+          <AlertDescription>
+            Please try again in {retryAfter} seconds.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {error && !rateLimitExceeded && <p className="text-red-500 mt-4">{error}</p>}
       {videoUrl && (
         <div className="mt-4 space-y-4">
           <h2 className="text-lg font-semibold">Generated Video</h2>
@@ -259,10 +276,10 @@ export function CodeGeneratorForm({ onThemeChange, onLanguageChange }) {
           />
           <div className="flex justify-center">
             <Button
-              type="button" // Add type="button" to prevent form submission
+              type="button"
               onClick={handleDownload}
               className="w-full md:w-auto"
-              disabled={isDownloading} // Disable button while downloading
+              disabled={isDownloading}
             >
               {isDownloading ? "Downloading..." : "Download Video"}
             </Button>
