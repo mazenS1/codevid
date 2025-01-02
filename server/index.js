@@ -34,7 +34,7 @@ const statsAuth = basicAuth({
 });
 
 // API routes
-app.use('/api', syntaxRoutes);
+app.use('/api', rateLimiter({ maxRequests: 50, windowMs: 30000 }) ,syntaxRoutes);
 
 // Stats endpoint (protected)
 app.get('/api/stats', statsAuth, (req, res) => {

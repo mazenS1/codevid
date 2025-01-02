@@ -1,4 +1,5 @@
 const { Redis } = require('@upstash/redis');
+require('dotenv').config();
 
 // Initialize Redis client with Upstash
 const redis = new Redis({

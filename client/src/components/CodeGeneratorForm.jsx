@@ -57,9 +57,9 @@ export function CodeGeneratorForm({ onThemeChange, onLanguageChange }) {
         }
       );
       if (response.status === 429) {
-        const retryAfter = response.headers.get("Retry-After");
+        const resetTime = response.headers.get("X-RateLimit-Reset");
         setRateLimitExceeded(true);
-        setRetryAfter(6000);
+        setRetryAfter(resetTime);
         throw new Error(
           `Rate limit exceeded. Please try again in ${retryAfter} seconds.`
         );
