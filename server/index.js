@@ -11,8 +11,6 @@ const app = express();
 // Request logging
 app.use(requestLogger);
 
-// Rate limiter
-app.use(rateLimiter({ maxRequests: 10, windowMs: 60 * 1000 }));
 
 // CORS configuration
 app.use(cors({
@@ -34,7 +32,7 @@ const statsAuth = basicAuth({
 });
 
 // API routes
-app.use('/api', rateLimiter({ maxRequests: 50, windowMs: 30000 }) ,syntaxRoutes);
+app.use('/api', rateLimiter({ maxRequests: 15, windowMs: 60000 }) ,syntaxRoutes);
 
 // Stats endpoint (protected)
 app.get('/api/stats', statsAuth, (req, res) => {
