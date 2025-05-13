@@ -37,7 +37,7 @@ export function CodeGeneratorForm({ onThemeChange, onLanguageChange }) {
     setError(null);
     setVideoUrl(null);
     setRateLimitExceeded(false);
-    function(  
+     
 
     try {
       const response = await fetch(
