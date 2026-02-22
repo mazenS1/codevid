@@ -14,6 +14,10 @@ CodeVid is a full-stack app for generating syntax-highlighted code videos. It in
 
 - Node.js 18+
 - npm
+- FFmpeg available on your system `PATH` (required by `fluent-ffmpeg` for video generation)
+- Google Chrome installed at `/usr/bin/google-chrome` (current Puppeteer launch path in `server/controllers/syntaxController.js`)
+
+If Chrome is installed in a different location on your machine, update `executablePath` in `server/controllers/syntaxController.js` to match your local install path.
 
 ## Environment variables
 
